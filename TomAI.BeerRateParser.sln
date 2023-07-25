@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33801.468
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TomAI.Domain", "TomAI.Domain\TomAI.Domain.csproj", "{BAAF52D8-4FA8-4D4C-BDF4-E5B2404381C4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TomAI.BeerRateParser", "TomAI.BeerRateParser\TomAI.BeerRateParser.csproj", "{9AD318DA-B36A-49C5-9884-30CD24A74397}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BAAF52D8-4FA8-4D4C-BDF4-E5B2404381C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAAF52D8-4FA8-4D4C-BDF4-E5B2404381C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAAF52D8-4FA8-4D4C-BDF4-E5B2404381C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAAF52D8-4FA8-4D4C-BDF4-E5B2404381C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AD318DA-B36A-49C5-9884-30CD24A74397}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AD318DA-B36A-49C5-9884-30CD24A74397}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AD318DA-B36A-49C5-9884-30CD24A74397}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AD318DA-B36A-49C5-9884-30CD24A74397}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7224207D-AE08-4237-9067-7AD195ECFF11}
+	EndGlobalSection
+EndGlobal
