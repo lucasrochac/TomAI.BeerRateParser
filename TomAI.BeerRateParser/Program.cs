@@ -1,86 +1,107 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Reflection;
-using TomAI.Domain;
+﻿using TomAI.Domain;
+using TomAI.RabbitConnector.RabbitConnector;
+using Microsoft.Extensions.Configuration;
+using NPOI.SS.Formula.Functions;
+using Newtonsoft.Json;
 
-string filePath = "C:\\Users\\Integer\\Desktop\\ratebeer_small.txt";
-var reviews = new List<BeerReview>();
-var currentBeerReview = new BeerReview();
-
-string[] lines = File.ReadAllLines(filePath);
-
-
-foreach (var line in lines)
+internal class Program
 {
-    if (string.IsNullOrWhiteSpace(line))
+    private static void Main(string[] args)
     {
-        if (currentBeerReview != null)
+        string filePath = "C:\\Users\\Integer\\Desktop\\ratebeer_small.txt";
+
+        var lines = File.ReadAllLines(filePath);
+        var reviewlines = new List<string>();
+
+        foreach (string line in lines)
         {
-            reviews.Add(currentBeerReview);
-            currentBeerReview = null;
+            if (string.IsNullOrEmpty(line))
+            {
+                var beerReview = ParseBeerReview(reviewlines);
+                Console.WriteLine(string.Format("BeerName: {0} | BeerOverall: {1}", beerReview.Beer.Name, beerReview.Review.Overall));
+
+                SendRabbitMessage(beerReview);
+                reviewlines.Clear();
+                continue;
+            }
+            else
+            {
+                reviewlines.Add(line);
+            }
         }
+
     }
-    else
+
+    private static async void SendRabbitMessage(BeerReview review)
+    {   
+        var json = JsonConvert.SerializeObject(review);
+        IRabbitMQService rabbitMqService = new RabbitMQService();
+        rabbitMqService.SendMessage(json);
+    }
+
+
+    private static double ConvertValueResult(string value)
     {
-        var parts = line.Split(':');
-        if (parts.Length == 2)
+        var splitted = value.Split('/');
+        return Convert.ToDouble(splitted[0]);
+    }
+
+    private static BeerReview ParseBeerReview(List<string> reviewlines)
+    {
+        var beerReview = new BeerReview();
+        foreach (var line in reviewlines)
         {
+            var parts = line.Split(':');
+
+            if (parts.Length != 2)
+                continue;
+
             var key = parts[0].Trim();
             var value = parts[1].Trim();
 
-            if (currentBeerReview == null)
+            switch (key)
             {
-                currentBeerReview = new BeerReview();
-            }
-
-            if (!TrySetPropertyValue(currentBeerReview, key, value))
-            {
-                // Lidar com propriedade desconhecida ou erro de mapeamento, se necessário
+                case "beer/name":
+                    beerReview.Beer.Name = value;
+                    break;
+                case "beer/beerId":
+                    beerReview.Beer.BeerId = int.Parse(value);
+                    break;
+                case "beer/brewerId":
+                    beerReview.Beer.BrewerId = int.Parse(value);
+                    break;
+                case "beer/ABV":
+                    beerReview.Beer.ABV = double.Parse(value);
+                    break;
+                case "beer/style":
+                    beerReview.Beer.Style = value;
+                    break;
+                case "review/appearance":
+                    beerReview.Review.Appearance = ConvertValueResult(value);
+                    break;
+                case "review/aroma":
+                    beerReview.Review.Aroma = ConvertValueResult(value);
+                    break;
+                case "review/palate":
+                    beerReview.Review.Palate = ConvertValueResult(value);
+                    break;
+                case "review/taste":
+                    beerReview.Review.Taste = ConvertValueResult(value);
+                    break;
+                case "review/overall":
+                    beerReview.Review.Overall = ConvertValueResult(value);
+                    break;
+                case "review/time":
+                    beerReview.Review.Time = long.Parse(value);
+                    break;
+                case "review/profileName":
+                    beerReview.Review.ProfileName = value;
+                    break;
+                case "review/text":
+                    beerReview.Review.Text = value;
+                    break;
             }
         }
+        return beerReview;
     }
-}
-
-if (currentBeerReview != null)
-{
-    reviews.Add(currentBeerReview);
-    Console.WriteLine(string.Format("Beer: {0} | Score: {1}", currentBeerReview.Beer.Name, currentBeerReview.Review.Overall));
-}
-
-bool TrySetPropertyValue(BeerReview beerReview, string key, string value)
-{
-    var memberName = key.Replace('/', '.'); 
-    var validationResults = new List<ValidationResult>();
-
-    var proparray = key.Split('/');
-
-    Type type = GetClassType(ConvertToClassName(proparray[0]));
-    var obj = InstantiateClass(type);
-    var context = new ValidationContext(obj);
-    
-    foreach(var p in type.GetProperties())
-    {
-        var displayAttribute = p.GetCustomAttribute<DisplayAttribute>();
-        if (displayAttribute != null && displayAttribute.Name == proparray[1])
-        {
-            var convertedValue = Convert.ChangeType(value, p.PropertyType);
-            p.SetValue(obj, convertedValue);
-        }
-    }   
-
-    return false;
-}
-
-Type GetClassType (string typeName)
-{
-    return Type.GetType($"TomAI.Domain.{typeName}, TomAI.Domain");
-}
-
-object InstantiateClass (Type type)
-{
-    return Activator.CreateInstance(type);
-}
-
-string ConvertToClassName(string className)
-{
-    return char.ToUpper(className[0]) + className.Substring(1);
 }
