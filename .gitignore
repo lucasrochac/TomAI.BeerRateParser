@@ -1,3 +1,7 @@
 /TomAI.BeerRateParser/obj
 obj
 .vs
+*.dll
+*.json
+*.exe
+*.pdb

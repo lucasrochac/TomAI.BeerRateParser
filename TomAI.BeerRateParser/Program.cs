@@ -3,12 +3,13 @@ using TomAI.RabbitConnector.RabbitConnector;
 using Microsoft.Extensions.Configuration;
 using NPOI.SS.Formula.Functions;
 using Newtonsoft.Json;
+using System.Net;
 
 internal class Program
 {
     private static void Main(string[] args)
     {
-        string filePath = "C:\\Users\\Integer\\Desktop\\ratebeer_small.txt";
+        string filePath = "C:\\Users\\Integer\\Desktop\\ratebeer" + ".txt";
 
         var lines = File.ReadAllLines(filePath);
         var reviewlines = new List<string>();
@@ -17,12 +18,16 @@ internal class Program
         {
             if (string.IsNullOrEmpty(line))
             {
-                var beerReview = ParseBeerReview(reviewlines);
-                Console.WriteLine(string.Format("BeerName: {0} | BeerOverall: {1}", beerReview.Beer.Name, beerReview.Review.Overall));
-
-                SendRabbitMessage(beerReview);
-                reviewlines.Clear();
-                continue;
+                var beerReview = ParseBeerReview(reviewlines);                
+                
+                if(beerReview.Beer.BeerId == 0) { 
+                    continue; 
+                } else {
+                    Console.WriteLine(string.Format("BeerName: {0} - {1} | BeerOverall: {2}", beerReview.Beer.Name, beerReview.Beer.Style, beerReview.Review.Overall));
+                    SendRabbitMessage(beerReview);
+                    reviewlines.Clear();
+                    continue;
+                }
             }
             else
             {
@@ -38,7 +43,6 @@ internal class Program
         IRabbitMQService rabbitMqService = new RabbitMQService();
         rabbitMqService.SendMessage(json);
     }
-
 
     private static double ConvertValueResult(string value)
     {
@@ -62,22 +66,22 @@ internal class Program
             switch (key)
             {
                 case "beer/name":
-                    beerReview.Beer.Name = value;
+                    beerReview.Beer.Name = WebUtility.UrlDecode(value);
                     break;
                 case "beer/beerId":
-                    beerReview.Beer.BeerId = int.Parse(value);
+                    beerReview.Beer.BeerId = ValidateIds(value);
                     break;
                 case "beer/brewerId":
-                    beerReview.Beer.BrewerId = int.Parse(value);
+                    beerReview.Beer.BrewerId = ValidateIds(value);
                     break;
                 case "beer/ABV":
-                    beerReview.Beer.ABV = double.Parse(value);
+                    beerReview.Beer.ABV = ValidateIds(value);
                     break;
                 case "beer/style":
-                    beerReview.Beer.Style = value;
+                    beerReview.Beer.Style = WebUtility.UrlDecode(value);
                     break;
                 case "review/appearance":
-                    beerReview.Review.Appearance = ConvertValueResult(value);
+                    beerReview.Review.Appearence = ConvertValueResult(value);
                     break;
                 case "review/aroma":
                     beerReview.Review.Aroma = ConvertValueResult(value);
@@ -92,16 +96,23 @@ internal class Program
                     beerReview.Review.Overall = ConvertValueResult(value);
                     break;
                 case "review/time":
-                    beerReview.Review.Time = long.Parse(value);
+                    beerReview.Review.Time = value != "-" ? long.Parse(value) : 0;
                     break;
                 case "review/profileName":
-                    beerReview.Review.ProfileName = value;
+                    beerReview.Review.ProfileName = WebUtility.UrlDecode(value);
                     break;
                 case "review/text":
-                    beerReview.Review.Text = value;
+                    beerReview.Review.Text = WebUtility.UrlDecode(value);
                     break;
             }
         }
         return beerReview;
+    }
+
+    private static int ValidateIds(string value)
+    {
+        int id = 0;
+        int.TryParse(value, out id);
+        return id;
     }
 }

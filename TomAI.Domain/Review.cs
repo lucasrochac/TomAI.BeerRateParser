@@ -5,7 +5,7 @@ namespace TomAI.Domain
     public class Review
     {
         [Display(Name = "review/appearance")]
-        public double Appearance { get; set; }
+        public double Appearence { get; set; }
 
         [Display(Name = "review/aroma")]
         public double Aroma { get; set; }
